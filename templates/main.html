@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Chat</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+  <script type="text/javascript" src="//code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <style id="compiled-css" type="text/css">
+    body {
+      min-height: 100vh;
+      margin: 0; /* Added to reset default margin */
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      width: 5px;
+      background: #f5f5f5;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      width: 1em;
+      background-color: #ddd;
+      outline: 1px solid slategrey;
+      border-radius: 1rem;
+    }
+
+    .text-small {
+      font-size: 0.9rem;
+    }
+
+    .chat-box {
+      height: calc(100vh - 114px); /* Adjusted to fit full screen, considering 64px for header */
+      overflow-y: scroll;
+    }
+
+    .messages-box {
+      height: calc(100vh - 64px); /* Adjusted to fit full screen, considering 64px for header */
+      overflow-y: scroll;
+    }
+
+    .rounded-lg {
+      border-radius: 0.5rem;
+    }
+
+    input::placeholder {
+      font-size: 0.9rem;
+      color: #999;
+    }
+
+    /* Flexbox styling for the chat header */
+    .chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  
+    /* Style for the Create Room button */
+    .create-room-button {
+      width: 30px;
+      height: 30px;
+      border: 0px solid black;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 3px;
+      margin: 0px;
+      vertical-align: middle;
+      background-color: #f8f9fa!important;
+    }
+    
+    .addroom-panel {
+      position: absolute;
+      background-color: white;
+      border: 1px solid #ccc;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 10px;
+      display: none;
+      left: calc(25%-40px);
+      z-index: 1; /* Ensure the panel is above other elements */
+    }
+    
+    .show-addroom-panel {
+      display: block;
+    }
+
+    .invisible {
+      display: none !important;
+    }
+
+    .notif {
+      display: block;
+      margin-left: 2em;
+      padding-left: 1em;
+      list-style-type: disc;
+    }
+    
+    li {
+      list-style-type: disc;
+      color: #f00;
+    }
+
+    .messages-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #f2f2f2;
+      border-bottom: 1px solid #ccc;
+    }
+
+    #scroll-arrow {
+      position: fixed;
+      bottom: 64px;
+      right: 20px;
+      display: none;
+      cursor: pointer;
+    }
+
+    #messages {
+      overflow-anchor: none !important;
+    }
+
+
+    /* EOS */
+  </style>
+
+  <script id="insert"></script>
+
+</head>
+<body>
+
+  <div class="row rounded-lg overflow-hidden shadow" style="height: 100vh !important; margin: 0;">
+    <!-- Users box-->
+    <div class="col-3 px-0">
+      <div class="bg-white">
+
+        <div class="bg-gray px-4 py-2 bg-light chat-header">
+          <p class="h5 mb-0 py-1">Chat Rooms</p>
+          <button class="create-room-button" onclick='toggleAddRoom()' id='createroom'><svg id="svg" xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink" width="30" height="30" viewBox="0, 0, 400,400"><g id="svgg"><path id="path0" d="M206.973 14.937 C 74.354 43.815,48.407 201.998,166.429 262.114 C 209.039 283.818,271.631 285.574,309.736 266.134 C 317.034 262.411,317.393 262.411,328.090 266.103 C 371.898 281.226,400.777 263.455,374.984 237.247 L 363.968 226.054 370.960 216.322 C 442.324 116.988,336.293 -13.223,206.973 14.937 M277.064 38.016 C 364.305 60.329,397.825 144.075,346.564 211.653 C 338.559 222.207,338.542 222.822,345.893 236.797 C 352.875 250.070,351.663 250.650,333.000 242.962 C 318.212 236.870,318.096 236.870,306.052 242.974 C 222.825 285.148,113.893 230.302,114.024 146.289 C 114.139 71.959,196.340 17.371,277.064 38.016 M233.770 101.277 C 232.213 103.153,230.732 110.850,230.306 119.277 L 229.563 134.000 216.226 134.000 C 196.937 134.000,189.802 140.419,196.070 152.131 C 197.851 155.459,200.368 156.000,214.070 156.000 L 230.000 156.000 230.000 168.870 C 230.000 184.819,232.419 191.527,238.743 193.114 C 249.257 195.753,252.000 191.576,252.000 172.930 L 252.000 156.000 268.930 156.000 C 283.621 156.000,286.133 155.488,287.930 152.131 C 294.351 140.132,287.122 134.000,266.555 134.000 L 252.000 134.000 252.000 118.400 C 252.000 108.933,251.056 101.856,249.600 100.400 C 246.140 96.940,236.947 97.449,233.770 101.277 M54.261 186.143 C 6.038 218.345,-7.492 284.828,24.383 332.950 L 30.694 342.479 21.347 351.185 C -0.931 371.935,25.212 389.047,60.756 376.980 C 69.389 374.049,70.204 374.151,88.326 380.432 C 125.922 393.461,171.553 388.949,206.193 368.776 C 244.602 346.408,272.287 295.000,245.923 295.000 C 239.360 295.000,238.649 295.711,232.234 308.683 C 207.279 359.151,139.200 380.451,84.301 354.966 C 71.970 349.242,68.798 348.949,60.807 352.796 C 57.613 354.333,52.946 356.203,50.435 356.951 L 45.870 358.311 49.927 351.655 C 55.593 342.363,55.014 335.807,47.729 326.775 C 17.672 289.505,23.826 239.055,62.179 208.331 C 68.130 203.563,74.575 198.397,76.500 196.851 C 81.141 193.123,80.932 186.932,76.000 182.000 C 70.435 176.435,68.146 176.872,54.261 186.143 " stroke="none" fill="#000000" fill-rule="evenodd"></path></g></svg></button>
+          <div id="addroom" class="addroom-panel">
+            <button onclick="joinroom()">Join room</button>
+            <button onclick="createroom()">Create room</button>
+          </div>
+        </div>
+
+        <div class="messages-box">
+          <div class="list-group rounded-0" id='roomlist'>
+            {% for x in availablerooms %}
+              <a class="list-group-item list-group-item-action list-group-item-light rounded-0" href="javascript:void(0);" id='gotoroom{{x}}' onclick="gotoroom('{{x}}');">
+                <div class="media"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user" width="50" class="rounded-circle">
+                  <div class="media-body ml-4">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                      <h6 class="mb-0">{{x}}</h6><small class="small font-weight-bold" id='date{{x}}'>----</small>
+                    </div>
+                    <p class="font-italic mb-0 text-small" id='recent{{x}}'>Loading...</p>
+                    <p id='notif{{x}}' class='invisible' style='color: red;'>New messages!</p>
+                  </div>
+                </div>
+              </a>
+            {% endfor %}
+            
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Chat Box-->
+    <div class="col-9 px-0" style="height: 100vh !important;">
+      <div class="bg-gray px-4 py-2 bg-light messages-header" style='height: 50px;'>
+        <button class='create-room-button' style='position: absolute; left: 0px;'><svg preserveAspectRatio="xMidYMin" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="--size: 16px; --rotate: 0deg;"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.25 5C10.25 4.0335 11.0335 3.25 12 3.25C12.9665 3.25 13.75 4.0335 13.75 5C13.75 5.9665 12.9665 6.75 12 6.75C11.0335 6.75 10.25 5.9665 10.25 5ZM10.25 12C10.25 11.0335 11.0335 10.25 12 10.25C12.9665 10.25 13.75 11.0335 13.75 12C13.75 12.9665 12.9665 13.75 12 13.75C11.0335 13.75 10.25 12.9665 10.25 12ZM10.25 19C10.25 18.0335 11.0335 17.25 12 17.25C12.9665 17.25 13.75 18.0335 13.75 19C13.75 19.9665 12.9665 20.75 12 20.75C11.0335 20.75 10.25 19.9665 10.25 19Z"></path></svg></button>
+        <p class="h5 mb-0 py-1" id='chatheadername' style='position: absolute; left: 36px;'>... <a href="https://videocall.mea-team.repl.co/"><svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+ width="36" height="24.233" viewBox="0 0 361.000000 243.000000"
+ preserveAspectRatio="xMidYMid meet">
+
+<g transform="translate(0.000000,243.000000) scale(0.100000,-0.100000)"
+fill="#000000" stroke="none">
+<path d="M330 2419 c-117 -23 -245 -132 -292 -246 l-23 -58 0 -885 c0 -825 1
+-888 18 -930 44 -112 143 -210 249 -247 50 -17 105 -18 933 -18 820 0 883 1
+925 18 116 46 208 140 247 250 17 49 18 105 18 927 0 823 -1 878 -18 928 -37
+106 -135 205 -247 249 -42 17 -106 18 -905 20 -473 0 -880 -3 -905 -8z m1800
+-118 c76 -40 106 -69 141 -134 l34 -62 0 -875 0 -875 -34 -62 c-35 -65 -65
+-94 -141 -134 l-45 -24 -875 0 -875 0 -62 34 c-65 35 -94 65 -134 141 l-24 45
+0 875 0 875 24 45 c13 25 34 59 47 76 27 35 112 85 164 95 19 4 418 6 885 6
+l850 -2 45 -24z"/>
+<path d="M3292 2212 c-23 -9 -186 -96 -362 -192 l-319 -175 -1 -58 0 -59 43
+25 c78 46 595 326 650 353 43 22 62 25 92 20 55 -11 101 -60 110 -117 3 -24 5
+-391 3 -816 -3 -762 -3 -772 -24 -800 -29 -40 -81 -65 -126 -60 -30 4 -469
+236 -705 374 l-43 25 0 -59 1 -58 325 -179 c179 -98 344 -185 367 -193 131
+-46 285 51 302 190 3 28 5 408 3 842 -3 730 -4 792 -21 822 -29 54 -87 102
+-140 118 -64 19 -101 18 -155 -3z"/>
+</g>
+</svg></a></p>
+        <span class='d-flex align-items-center justify-content-between mb-1' style="right: 0px; top: 0px; position: absolute; padding: 8px;"><button class='create-room-button'><svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+ width="24" height="24" viewBox="0 0 298.000000 320.000000"
+ preserveAspectRatio="xMidYMid meet">
+
+<g transform="translate(0.000000,320.000000) scale(0.100000,-0.100000)"
+fill="#000000" stroke="none">
+<path d="M1321 3188 c-109 -13 -166 -48 -204 -123 -8 -16 -36 -102 -61 -190
+-26 -87 -52 -165 -58 -173 -7 -7 -32 -24 -57 -37 -25 -13 -73 -40 -106 -60
+-34 -21 -69 -34 -80 -32 -11 3 -82 21 -158 41 -213 56 -304 45 -374 -42 -106
+-133 -214 -343 -221 -430 -8 -90 15 -130 160 -278 70 -73 128 -136 129 -140 1
+-14 1 -228 0 -242 -1 -7 -57 -73 -125 -147 -69 -73 -133 -149 -142 -167 -12
+-21 -18 -56 -19 -98 0 -58 5 -76 48 -165 89 -184 181 -315 244 -345 62 -29
+122 -25 305 20 90 22 169 40 176 40 16 0 207 -107 221 -124 6 -7 31 -84 57
+-171 51 -175 63 -206 103 -248 42 -46 71 -55 209 -68 103 -9 158 -9 254 0 130
+13 158 23 199 68 40 42 52 73 103 248 26 87 51 164 57 171 14 17 205 124 221
+124 7 0 86 -18 176 -40 89 -22 175 -40 191 -40 41 0 141 38 169 64 39 34 131
+181 186 295 46 97 51 112 51 176 0 85 -3 91 -167 267 -65 70 -118 132 -119
+138 0 5 -1 60 -1 120 0 61 1 115 1 121 1 6 59 70 129 143 146 149 168 187 160
+280 -6 70 -113 291 -190 390 -98 128 -169 142 -405 80 -76 -20 -147 -38 -158
+-41 -11 -2 -46 11 -80 32 -33 20 -81 47 -106 60 -25 13 -50 30 -57 37 -6 8
+-32 86 -58 173 -62 214 -81 249 -159 288 -64 32 -287 45 -444 25z m316 -198
+c52 0 56 -6 103 -185 42 -160 65 -209 121 -259 26 -22 99 -68 163 -101 156
+-79 184 -81 401 -26 148 37 161 39 178 24 40 -37 192 -293 185 -312 -1 -5 -55
+-64 -118 -131 -63 -67 -128 -145 -145 -174 -29 -50 -30 -55 -33 -202 -5 -221
+0 -233 178 -424 58 -61 106 -118 108 -126 8 -32 -119 -264 -170 -311 l-23 -22
+-160 39 c-228 56 -242 55 -394 -22 -131 -67 -209 -127 -234 -180 -8 -18 -34
+-103 -57 -188 -23 -85 -49 -162 -56 -170 -12 -12 -48 -15 -194 -15 -146 0
+-182 3 -194 15 -8 8 -26 60 -41 115 -48 182 -65 232 -94 272 -40 55 -74 79
+-214 152 -146 76 -168 77 -393 22 l-159 -40 -23 22 c-54 50 -188 289 -175 311
+4 8 58 69 120 135 170 183 172 187 177 381 4 195 -7 221 -181 405 -62 66 -113
+128 -113 138 0 41 136 276 182 314 10 9 53 2 178 -29 236 -57 259 -54 470 66
+77 44 125 88 150 137 10 19 37 101 59 182 22 80 45 155 51 166 8 17 23 21 83
+24 39 2 105 3 146 1 41 -2 94 -4 118 -4z"/>
+<path d="M1425 2139 c-142 -15 -306 -112 -384 -230 -114 -170 -128 -361 -40
+-546 76 -160 218 -266 402 -300 80 -14 94 -14 175 0 233 43 400 208 448 442
+39 188 -40 397 -197 519 -114 90 -257 130 -404 115z m191 -218 c83 -32 148
+-91 185 -168 29 -61 33 -77 33 -153 -1 -69 -6 -95 -26 -140 -32 -72 -99 -139
+-173 -176 -52 -25 -71 -29 -145 -29 -74 0 -93 4 -145 29 -74 37 -141 104 -173
+176 -20 45 -25 71 -26 140 0 76 4 92 33 153 77 160 265 233 437 168z"/>
+</g>
+</svg></button></span>
+      </div>
+      <div class="px-4 py-5 chat-box bg-white" id="messages" style='margin: auto;'>
+        <!-- Sender Message-->
+        <!-- Your existing message code... -->
+        <b>No chat room open</b>
+
+      </div>
+
+      <!-- Typing area -->
+      <form class="bg-light" onsubmit="return false;">
+        <div class="input-group">
+          <input type="text" placeholder="Type a message" aria-describedby="button-addon2" class="form-control rounded-0 border-0 py-4 bg-light" id="messageinput" autocomplete="off">
+          <div class="input-group-append">
+            <button id="button-addon2" type="submit" class="btn btn-link" onclick='submitmessage()'> <i class="fa fa-paper-plane"></i></button>
+          </div>
+        </div>
+      </form>
+
+      <div id="scroll-arrow">&#x25BC;</div>
+
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.js"></script>
+
+  <script>
+    var script = document.createElement('script');
+    script.src = 'https://code.jquery.com/jquery-3.6.3.min.js'; // Check https://jquery.com/ for the current version
+    document.getElementsByTagName('head')[0].appendChild(script);
+    let currentroom = '';
+    const messageInput = document.getElementById('messageinput');
+    const messagesContainer = document.getElementById('messages');
+    const roomListContainer = document.getElementById('roomlist');
+    let rooms = {{ availablerooms | safe }}
+    let timedifference = new Date().getTimezoneOffset()/60
+    let start = 0;
+
+    function toggleAddRoom() {
+      console.log('toggle')
+      var addRoomDiv = document.getElementById("addroom");
+      addRoomDiv.classList.toggle("show-addroom-panel");
+    }
+
+    
+    async function loadmessages(room, startpos, past) {
+      if (currentroom != '') {
+        let messages = await fetch('/api/retrieve/'+room,{
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            "Content-Security-Policy": "upgrade-insecure-requests",
+           },
+          method: 'POST',
+          body: JSON.stringify({"timediff": timedifference, "start":startpos})
+        })
+        messages = await messages.text()
+        if (messages != 'no') {
+          if (messages != undefined) {
+            messages = await JSON.parse(messages)
+            const messagearea = document.getElementById('messages')
+            if (!past) {
+              messagearea.innerHTML = ''
+            }
+            const message = document.createElement("div")
+            for (var i = 0; i < messages.length; i++) {
+              if (messages[i][0] == '{{user}}') {
+                message.innerHTML += '<div class="media w-50 ml-auto mb-3"><div class="media-body"><b>'+messages[i][0]+'</b><div class="bg-primary rounded py-2 px-3 mb-2"><p class="text-small mb-0 text-white" style="word-wrap: break-word !important;">'+messages[i][1]+'</p></div><p class="small text-muted">'+messages[i][2]+'</p></div></div>'
+              } else {
+                message.innerHTML += '<div class="media w-50 mb-3"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user" width="50" class="rounded-circle"><div class="media-body ml-3"><b>'+messages[i][0]+'</b><div class="bg-light rounded py-2 px-3 mb-2"><p class="text-small mb-0 text-muted" style="word-wrap: break-word !important;">'+messages[i][1]+'</p></div><p class="small text-muted">'+messages[i][2]+'</p></div></div>'
+              }
+            }
+            if (past) {
+              console.log('loading past')
+              lastScrollPosition = messagesContainer.scrollTop;
+              messagearea.insertBefore(message, messagearea.children[0])
+              messagesContainer.scrollTop = messagesContainer.scrollTop + +messagesContainer.clientHeight
+            } else {
+              messagearea.appendChild(message)
+            }
+          } else {
+            document.getElementById('messages').innerHTML = ''
+          }
+        }
+      }
+    }
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function generateKeyPair(mod) {
+      return await crypto.subtle.generateKey(
+        {
+          name: 'RSA-OAEP',
+          modulusLength: mod, 
+          publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+          hash: 'SHA-256',
+        },
+        true,
+        ['encrypt', 'decrypt']
+      );
+    }
+    
+
+    async function decryptAESKey(encryptedAESKey) {
+      const decryptedAESKey = await crypto.subtle.decrypt(
+        { name: 'RSA-OAEP' },
+        privateKey,
+        encryptedAESKey
+      );
+    
+      return new Uint8Array(decryptedAESKey);
+    }
+    
+
+    async function getkey(){
+      k = await generateKeyPair(3072);
+      let priv = k.privateKey;
+      let pub = k.publicKey;
+      const response = await fetch('/key',{
+        method: 'POST',
+        headers: {
+          'key': btoa(`-----BEGIN PUBLIC KEY-----\n${String.fromCharCode.apply(null, new Uint8Array(await crypto.subtle.exportKey('spki', publicKey)))}\n-----END PUBLIC KEY-----`),
+          'user': '{{user}}',
+          "Content-Security-Policy": "upgrade-insecure-requests",
+          'Content-Type': 'application/json',
+        }
+      });
+    }
+    
+    
+    function sendmessage(message, room) {
+      if (currentroom != '') {
+        const url = '/api/send'
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'message': message,
+            'room': room,
+            'user': '{{user}}',
+            'Content-Type': 'application/json',
+            "Content-Security-Policy": "upgrade-insecure-requests"
+          },
+          body: JSON.stringify({"timediff":timedifference})
+        })
+      } else {
+        console.log('not in room')
+      }
+    }
+
+    
+    async function createroom() {
+      const url = '/api/createroom'
+      r = prompt('Room Name:')
+      if (/[\\/'"]/.test(r)) {
+        alert("You can't include the characters '/', '\\', or ' in the room name")
+      } else if (r != undefined && r != '' ){
+        if (r.length <= 20) {
+          p = prompt('Room Password (optional):')
+          fetch(url, {
+          method: 'POST',
+          headers: {
+            'room': r,
+            'pwd': p,
+            'creator': '{{user}}',
+            "Content-Security-Policy": "upgrade-insecure-requests"
+          }
+          })
+          await sleep(250)
+          window.location.href = '/'
+        } else {
+          alert("You can't have a room name longer than 20 characters!")
+        }
+      }
+    }
+
+    async function joinroom() {
+      const url = '/api/joinroom'
+      r = prompt('Room Name:')
+      if (r != undefined || r != ''){
+        if (rooms.includes(r)) {
+          alert('Already joined that room!')
+        } else {
+          k = prompt('Password (leave blank if None):')
+          fetch(url, {
+            method: 'POST',
+            headers: {
+              'room': r,
+              'pwd': k,
+              'user': '{{user}}',
+              "Content-Security-Policy": "upgrade-insecure-requests"
+            }
+          })
+          await sleep(250)
+          window.location.href = '/'
+        }
+      }
+    }
+
+    const textInput = document.getElementById("messageinput");
+
+    textInput.addEventListener("keyup", function(event) {
+      if (event.key === "Enter") {
+        submitmessage()
+      }
+    });
+
+    function submitmessage() {
+      event.preventDefault()
+      if (textInput.value != '') {
+        if (textInput.value.length <= 5000) {
+          sendmessage(textInput.value, currentroom);
+          textInput.value = '';
+        } else {
+          alert('There is a 5,000 character limit per message. There are currently '+textInput.value.length+' characters.')
+        }
+      }
+    }
+
+    function isAtBottom(element) {
+      return (element.clientHeight - (element.scrollHeight - element.scrollTop) >= -2);
+    }
+
+    const socket = io.connect('https://' + document.domain + ':' + location.port,{ query: 'username={{user}}'}); /* can you keep this or have a way to pass username in connecting request */
+
+    socket.on('new_message', (data) => {
+      if (data.room === currentroom) {
+        const isCurrentUser = data.user === '{{user}}';
+        const messageClass = isCurrentUser ? 'media w-50 ml-auto mb-3' : 'media w-50 mb-3';
+    
+        const messageDiv = document.createElement('div');
+        messageDiv.className = messageClass;
+
+        let messageContent
+        
+        const wasAtBottom = isAtBottom(messagesContainer);
+        console.log(wasAtBottom)
+        
+        if (data.user == '{{user}}') {
+          messageContent = '<div class="media-body"><b>'+data.user+'</b><div class="bg-primary rounded py-2 px-3 mb-2"><p class="text-small mb-0 text-white">'+data.message+'</p></div><p class="small text-muted">'+data.time+'</p></div>'
+        } else {
+          messageContent = '<img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user" width="50" class="rounded-circle"><div class="media-body ml-3"><b>'+data.user+'</b><div class="bg-light rounded py-2 px-3 mb-2"><p class="text-small mb-0 text-muted">'+data.message+'</p></div><p class="small text-muted">'+data.time+'</p></div>'
+        }
+    
+        messageDiv.innerHTML = messageContent;
+        messagesContainer.appendChild(messageDiv);
+    
+        // Scroll to the bottom of the messages container
+        if (wasAtBottom) {
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } else {
+          console.log('new messages at bottom')
+        }
+
+        let messagecont = data.message
+        if (messagecont.length > 50) {
+          messagecont = messagecont.slice(0,47)+'...'
+        }
+        const recentMessage = `${data.user}: ${messagecont}`;
+        const recentMessageElem = document.getElementById('recent'+data.room)
+        recentMessageElem.innerText = recentMessage;
+        if (document.hidden) {
+          var audio = new Audio('/static/vine-boom.mp3');
+          audio.play();
+          document.title = '* Chat'
+        }
+      } else if (roomListContainer.querySelector(`#gotoroom${data.room}`)) {
+        let messagecont = data.message
+        if (messagecont.length > 50) {
+          messagecont = messagecont.slice(0,47)+'...'
+        }
+        const recentMessage = `${data.user}: ${messagecont}`;
+        const recentMessageElem = roomListContainer.querySelector(`#recent${data.room}`);
+        recentMessageElem.innerHTML = recentMessage
+        document.getElementById('notif'+data.room).classList.remove('invisible')
+
+        if (document.hidden) {
+          var audio = new Audio('/static/vine-boom.mp3');
+          audio.play();
+        }
+        
+        document.title = '* Chat'
+      }
+    });
+
+    async function gotoroom (name) {
+      start = 0
+      if (currentroom != '') {
+        lastroom = document.getElementById('gotoroom'+currentroom)
+        lastroom.classList.toggle('active')
+        lastroom.classList.toggle('text-white')
+        lastroom.classList.toggle('list-group-item-light')
+      }
+
+      nextroom = document.getElementById('gotoroom'+name)
+      nextroom.classList.toggle('active')
+      nextroom.classList.toggle('text-white')
+      nextroom.classList.toggle('list-group-item-light')
+      
+      currentroom = name
+      loadmessages(currentroom, 0, false)
+      await sleep(750)
+      document.getElementById('messages').scrollTo(0, document.getElementById('messages').scrollHeight)
+      document.getElementById('chatheadername').innerHTML = name+' <a onclick=videocall("'+name+'")><svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="30" height="20.194" viewBox="0 0 361.000000 243.000000" preserveAspectRatio="xMidYMid meet"><g transform="translate(0.000000,243.000000) scale(0.100000,-0.100000)" fill="#000000" stroke="none"><path d="M330 2419 c-117 -23 -245 -132 -292 -246 l-23 -58 0 -885 c0 -825 1 -888 18 -930 44 -112 143 -210 249 -247 50 -17 105 -18 933 -18 820 0 883 1 925 18 116 46 208 140 247 250 17 49 18 105 18 927 0 823 -1 878 -18 928 -37 106 -135 205 -247 249 -42 17 -106 18 -905 20 -473 0 -880 -3 -905 -8z m1800 -118 c76 -40 106 -69 141 -134 l34 -62 0 -875 0 -875 -34 -62 c-35 -65 -65 -94 -141 -134 l-45 -24 -875 0 -875 0 -62 34 c-65 35 -94 65 -134 141 l-24 45 0 875 0 875 24 45 c13 25 34 59 47 76 27 35 112 85 164 95 19 4 418 6 885 6 l850 -2 45 -24z"/><path d="M3292 2212 c-23 -9 -186 -96 -362 -192 l-319 -175 -1 -58 0 -59 43 25 c78 46 595 326 650 353 43 22 62 25 92 20 55 -11 101 -60 110 -117 3 -24 5 -391 3 -816 -3 -762 -3 -772 -24 -800 -29 -40 -81 -65 -126 -60 -30 4 -469 236 -705 374 l-43 25 0 -59 1 -58 325 -179 c179 -98 344 -185 367 -193 131 -46 285 51 302 190 3 28 5 408 3 842 -3 730 -4 792 -21 822 -29 54 -87 102 -140 118 -64 19 -101 18 -155 -3z"/></g></svg></a>'
+      document.getElementById('notif'+name).classList.add('invisible')
+      document.title = 'Chat'
+      await sleep(500)
+      document.getElementById('messages').scrollTo(0, document.getElementById('messages').scrollHeight)
+      await sleep(500)
+      document.getElementById('messages').scrollTo(0, document.getElementById('messages').scrollHeight)
+    }
+
+    socket.on('multipleClients', (data) => {
+      console.log('multiple clients')
+      document.getElementById('messages').innerHTML = 'Another client with your account is currently open. You can only have one client open at a time. <button onclick="requestswitchclient()">Switch to this client</button>'
+      document.getElementById('roomlist').innerHTML = ''
+    })
+
+    async function requestswitchclient() {
+      socket.emit("handle_transfer", '{{user}}');
+      await sleep(250)
+      window.location.href = '/'
+    }
+    
+    async function loadRecentMessage(room) {
+      try {
+        const response = await fetch(`/api/retrieve/${room}`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            "Content-Security-Policy": "upgrade-insecure-requests",
+          },
+          body: JSON.stringify({ timediff: timedifference, 'start': 0})
+        });
+
+        if (response.ok) {
+          const messages = await response.json();
+          const recentMessageElem = document.getElementById('recent'+room)
+          const recentMessageDateElem = document.getElementById('date'+room)
+          if (messages.length > 0) {
+            let messagecont = messages[messages.length - 1][1]
+            if (messagecont.length > 50) {
+              messagecont = messagecont.slice(0,47)+'...'
+            }
+            const recentMessage = `${messages[messages.length - 1][0]}: ${messagecont}`;
+            recentMessageElem.innerText = recentMessage;
+            recentMessageDateElem.innerText = messages[messages.length - 1][2]
+          } else {
+            recentMessageElem.innerText = '';
+            recentMessageDateElem.innerText = ''
+          }
+        }
+      } catch (error) {
+        console.error('Error loading recent message:', error);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+	
+  	async function init() {
+  		rooms.forEach(room => loadRecentMessage(room));
+  	}
+
+    document.addEventListener("visibilitychange", () => {
+       if (document.hidden) {
+          console.log('not visible')
+       } else {
+          loadmessages(currentroom, 0, false)
+          sleep(250)
+          document.getElementById('messages').scrollTo(0, document.getElementById('messages').scrollHeight)
+          start = 0
+       }
+    });
+
+    const scrollArrow = document.getElementById('scroll-arrow');
+
+    async function checkScrollPosition() {
+        const isAtBottom = (messagesContainer.clientHeight - (messagesContainer.scrollHeight - messagesContainer.scrollTop) >= -200)
+        if (!isAtBottom) {
+            scrollArrow.style.display = 'block';
+        } else {
+            scrollArrow.style.display = 'none';
+        }
+        const isAtTop = messagesContainer.scrollTop <= 500;
+        if (isAtTop) {
+          loadmessages(currentroom,start+50,true)
+          start = start + 50;
+        }
+    }
+
+    function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    messagesContainer.addEventListener('scroll', checkScrollPosition);
+    scrollArrow.addEventListener('click', scrollToBottom);
+
+    // Initial check on page load
+    checkScrollPosition();
+
+    async function videocall(room) {
+      const req = await fetch('https://videocall.mea-team.repl.co/api/count/'+room, {
+        method: 'GET',
+        headers: {
+          'Access-Control-Allow-Credentials': false,
+        }
+      })
+      const count = await req.text()
+      console.log(count)
+      if (count == 0) {
+        sendmessage('{{user}} started a video call! join by clicking the video icon next to the room name',currentroom)
+      }
+      window.open('https://videocall.mea-team.repl.co/join?room_id='+currentroom+'&display_name={{user}}&mute_audio=1&mute_video=1', "_blank");
+    }
+
+  </script>
+  <script src="https://kit.fontawesome.com/9482d93e82.js" crossorigin="anonymous"></script>
+</body>
+</html>
